@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
-import { Reveal, SectionHeading } from "./Reveal";
+import { SectionHeading } from "./Reveal";
 import { projects, type Project } from "@/data/site";
 
 function ProjectCard({
@@ -48,12 +48,6 @@ function ProjectCard({
       </div>
     </button>
   );
-}
-
-function spanClass(span: Project["span"]) {
-  if (span === "wide") return "md:col-span-7";
-  if (span === "tall") return "md:col-span-5 md:row-span-2";
-  return "md:col-span-5";
 }
 
 function imageAspectClass(span: Project["span"]) {
