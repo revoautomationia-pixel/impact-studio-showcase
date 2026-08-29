@@ -1,31 +1,28 @@
-# Effet scroll horizontal sur mobile aussi
+# Scroll horizontal des réalisations aussi sur mobile
 
-Actuellement, la section `#realisations` utilise la galerie horizontale pilotée par le scroll vertical uniquement sur desktop (`md:` et plus). Sur mobile, c'est une grille verticale classique.
+Objectif : la galerie « Selected work » défile horizontalement au scroll vertical sur tous les écrans (mobile inclus), de façon stable, sans espace vide en fin de galerie ni décalage sur des largeurs inhabituelles.
 
-## Objectif
+## Ce qui change pour l'utilisateur
 
-Activer le même effet (section épinglée + défilement horizontal pendant le scroll vertical) sur mobile et tablette, avec des réglages adaptés au tactile.
+- Sur mobile, la grille verticale actuelle est remplacée par la même expérience que sur desktop : la section reste « collée » à l'écran pendant que les projets défilent latéralement.
+- Cartes dimensionnées pour le mobile (environ 80% de la largeur d'écran) afin que la carte suivante soit visible et invite au geste.
+- La dernière carte s'arrête proprement au bord droit, quelle que soit la taille d'écran.
+- Le clic sur une carte ouvre toujours la fiche projet (modal) inchangée ; le hover desktop est conservé.
+- Si l'utilisateur a activé « réduire les animations » dans son système, on retombe sur la liste verticale classique.
 
-## Changements dans `src/components/site/Portfolio.tsx`
+## Détails techniques
 
-1. **Supprimer la variante mobile verticale** (la grille `md:hidden`).
-2. **Étendre la galerie horizontale à tous les écrans** :
-   - Section épinglée sur toutes les tailles : remplacer `md:h-[320vh]` par `h-[320vh]`, et le wrapper `md:sticky md:h-screen` par `sticky h-screen`.
-   - Supprimer les `hidden md:block` / `md:hidden` qui séparent les deux versions.
-3. **Adapter les dimensions mobile** :
-   - Cartes : `w-[82vw]` sur mobile (au lieu de `42vw`), `sm:w-[60vw]`, puis `md:w-[42vw] lg:w-[34vw]`.
-   - Translation `x` ajustée : utiliser une translation en pixels calculée à partir de la largeur réelle de la piste (`scrollWidth - viewportWidth`) plutôt qu'un pourcentage fixe, afin que la fin de la galerie tombe juste quelle que soit la largeur d'écran. Mesure via `ref` + `resize` listener, avec fallback sur le pourcentage actuel.
-   - Hauteur de la section éventuellement réduite sur mobile (`h-[260vh]`) pour un défilement ni trop lent ni trop court.
-4. **Titre de section** : rester visible dans le wrapper sticky comme sur desktop.
-5. **Accessibilité** : conserver `prefers-reduced-motion` (pas de translation, galerie défilable nativement en horizontal si réduit, ou grille simple), labels ARIA et modal inchangés.
+Fichier concerné : `src/components/site/Portfolio.tsx`.
 
-## Vérification
-
-- Test Playwright en viewport mobile (390x844) : scroll vertical → cartes glissent horizontalement, fin de galerie sans espace vide.
-- Test desktop inchangé.
-- Modal projet toujours fonctionnel.
-- Build OK.
-
-## Fichiers concernés
-
-- `src/components/site/Portfolio.tsx`
+1. Supprimer la double implémentation (grille `md:hidden` + piste `hidden md:block`) et garder une seule piste horizontale, rendue à toutes les tailles.
+2. Remplacer la translation en pourcentage (`-55%`) par un calcul en pixels mesuré :
+   - refs sur le conteneur sticky et sur la piste ;
+   - `ResizeObserver` sur les deux éléments pour recalculer `distance = trackWidth - viewportWidth + padding` à chaque changement de taille ou d'orientation ;
+   - `useTransform(scrollYProgress, [0, 1], [0, -distance])`, borné à `Math.max(0, distance)`.
+3. Hauteur de section dynamique plutôt que `320vh` figé : `height = 100vh + distance` (via style inline), pour que la fin du scroll horizontal coïncide exactement avec la fin de la section — c'est ce qui rend l'effet stable sur mobile où les largeurs varient beaucoup.
+4. Conteneur sticky : `sticky top-0 h-[100svh] overflow-hidden` (utiliser `svh` pour éviter les sauts liés à la barre d'URL mobile) ; le titre de section reste au-dessus de la piste dans le bloc sticky.
+5. Tailles de cartes : `w-[80vw]` sur mobile, `w-[42vw] max-w-[620px]` en `md`, `w-[34vw]` en `lg`. Image `aspect-[16/10]` (mobile `aspect-4/3` pour un meilleur rapport).
+6. Accessibilité et repli :
+   - `useReducedMotion` → rendu en liste verticale (pas de sticky, pas de transform) ;
+   - garder `aria-label` sur chaque carte, focus clavier fonctionnel ; la piste reçoit `overflow-x-auto` désactivé pour éviter un double défilement, mais le focus clavier fait scroller la page verticalement grâce au sticky.
+7. Vérification : build, puis test Playwright en viewport mobile (390x844) et desktop (1280x800) pour confirmer le déplacement horizontal et l'arrêt propre sur la dernière carte.
