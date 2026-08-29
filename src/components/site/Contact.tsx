@@ -36,7 +36,7 @@ export function Contact() {
     e.preventDefault();
     const form = e.currentTarget;
     const data = Object.fromEntries(new FormData(form).entries());
-    const parsed = schema.safeParse({ ...data, consent: data.consent === "on" });
+    const parsed = schema.safeParse({ ...data, consent: data["consent"] === "on" });
 
     if (!parsed.success) {
       const next: Record<string, string> = {};
@@ -85,7 +85,7 @@ export function Contact() {
                   Nom *
                 </label>
                 <input id="name" name="name" required className={fieldClass} placeholder="Votre nom" />
-                {errors.name ? <p className="mt-2 text-xs text-destructive">{errors.name}</p> : null}
+                {errors["name"] ? <p className="mt-2 text-xs text-destructive">{errors["name"]}</p> : null}
               </div>
 
               <div>
@@ -100,7 +100,7 @@ export function Contact() {
                   Email *
                 </label>
                 <input id="email" name="email" type="email" required className={fieldClass} placeholder="vous@exemple.com" />
-                {errors.email ? <p className="mt-2 text-xs text-destructive">{errors.email}</p> : null}
+                {errors["email"] ? <p className="mt-2 text-xs text-destructive">{errors["email"]}</p> : null}
               </div>
 
               <div>
@@ -150,7 +150,7 @@ export function Contact() {
                   className={`${fieldClass} resize-none`}
                   placeholder="Parlez-nous de votre projet"
                 />
-                {errors.message ? <p className="mt-2 text-xs text-destructive">{errors.message}</p> : null}
+                {errors["message"] ? <p className="mt-2 text-xs text-destructive">{errors["message"]}</p> : null}
               </div>
 
               <div className="sm:col-span-2">
@@ -161,7 +161,7 @@ export function Contact() {
                     demande.
                   </span>
                 </label>
-                {errors.consent ? <p className="mt-2 text-xs text-destructive">{errors.consent}</p> : null}
+                {errors["consent"] ? <p className="mt-2 text-xs text-destructive">{errors["consent"]}</p> : null}
               </div>
 
               <div className="sm:col-span-2">
