@@ -1,41 +1,51 @@
-# Ajouter une vidéo en arrière-plan du hero
+# Effet scroll horizontal sur la section Réalisations
 
-Le composant `src/components/site/Hero.tsx` est déjà prévu pour accueillir une vidéo en arrière-plan. Aucune modification structurelle n'est nécessaire.
+Transformer la grille actuelle de la section `#realisations` en une galerie qui défile horizontalement pendant que l'utilisateur scroll verticalement (scroll-driven horizontal gallery).
 
-## Où renseigner la vidéo
+## Objectif
 
-En haut du fichier `src/components/site/Hero.tsx`, deux constantes sont vides :
+- La section s'épingle (pin) à l'écran pendant le scroll vertical.
+- Les cartes de projets glissent de droite à gauche proportionnellement à la progression du scroll.
+- L'effet reste fluide et respecte `prefers-reduced-motion`.
+- Sur mobile, conserver un défilement vertical natif (la galerie horizontale par scroll vertical n'est pas adaptée au tactile).
 
-```ts
-const HERO_VIDEO_WEBM = "";
-const HERO_VIDEO_MP4 = "";
-```
+## Approche technique
 
-Remplir au moins l'une des deux avec l'URL de la vidéo :
+Utiliser `motion/react` déjà installé :
 
-```ts
-const HERO_VIDEO_WEBM = "/showreel.webm";
-const HERO_VIDEO_MP4 = "/showreel.mp4";
-```
+- `useScroll` sur un conteneur de référence pour obtenir `scrollXProgress`.
+- `useTransform` pour convertir la progression en translation `translateX`.
+- Un conteneur interne très large qui contient toutes les cartes sur une seule ligne.
+- La section a une hauteur augmentée (par exemple `300vh`) pour créer la distance de scroll nécessaire.
+- Un wrapper sticky reste centré verticalement pendant le défilement.
 
-## Formats recommandés
+## Étapes d'implémentation
 
-- **WebM** en premier (plus léger, meilleur pour le web).
-- **MP4 H.264** en fallback (compatibilité maximale, notamment Safari / iOS).
-- Laisser `HERO_VIDEO_WEBM` vide si tu n'as qu'un MP4.
+1. **Refactor `src/components/site/Portfolio.tsx`**
+   - Remplacer la grille CSS actuelle par un conteneur horizontal.
+   - Ajouter une `ref` sur la section pour `useScroll({ target: ref, offset: ["start start", "end end"] })`.
+   - Calculer `x = useTransform(progress, [0, 1], ["0%", "-75%"])` (valeur à ajuster selon la largeur totale).
+   - Appliquer `x` au conteneur interne des cartes via `motion.div`.
 
-## Où placer le fichier
+2. **Adapter les cartes**
+   - Chaque carte occupe une largeur fixe (par exemple `60vw` desktop, `85vw` mobile si horizontal natif).
+   - Conserver les proportions d'image `aspect-[16/9]` ou `aspect-4/3`.
+   - Garder le hover scale et le badge "View".
 
-- Si la vidéo est hébergée en externe : utiliser l'URL absolue (`https://...`).
-- Si elle est dans le projet : la placer dans `public/` (par exemple `public/showreel.mp4`), puis la référencer avec un chemin relatif à la racine (`/showreel.mp4`).
+3. **Responsive**
+   - Desktop (`md:` et plus) : galerie horizontale pilotée par le scroll vertical.
+   - Mobile : garder le défilement vertical natif avec la grille existante, ou permettre un swipe horizontal natif.
 
-## Comportement existant
+4. **Accessibilité**
+   - Si l'utilisateur a activé `prefers-reduced-motion`, désactiver le pin et afficher la grille verticale standard.
+   - Conserver les labels ARIA et l'ouverture du modal au clic/clavier.
 
-- La vidéo se lance automatiquement, en sourdine, en boucle.
-- L'image poster (`heroPoster`) reste visible tant que la vidéo n'est pas chargée.
-- Un bouton "Activer le son / Couper le son" apparaît automatiquement dès qu'une vidéo est présente.
-- Le composant respecte `prefers-reduced-motion` pour les animations texte ; la vidéo reste active.
+5. **Vérification**
+   - Tester que le modal s'ouvre toujours correctement.
+   - Vérifier que les images lazy-loadées ne gênent pas le rendu horizontal.
+   - Contrôler le build et les performances (pas de recalculs excessifs).
 
-## Vérification
+## Fichiers concernés
 
-Après avoir renseigné une URL, recharger la page : la vidéo remplace le poster en arrière-plan du hero.
+- `src/components/site/Portfolio.tsx`
+- `src/styles.css` (si besoin d'ajuster les utilitaires de section)
