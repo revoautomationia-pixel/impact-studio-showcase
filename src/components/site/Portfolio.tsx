@@ -63,6 +63,9 @@ function imageAspectClass(span: Project["span"]) {
 export function Portfolio() {
   const [active, setActive] = useState<Project | null>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const stickyRef = useRef<HTMLDivElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const [distance, setDistance] = useState(0);
   const reduce = useReducedMotion();
 
   const { scrollYProgress } = useScroll({
@@ -70,7 +73,29 @@ export function Portfolio() {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-55%"]);
+  const x = useTransform(scrollYProgress, [0, 1], [0, -distance]);
+
+  useEffect(() => {
+    if (reduce) return;
+    const track = trackRef.current;
+    const sticky = stickyRef.current;
+    if (!track || !sticky) return;
+
+    const measure = () => {
+      const d = track.scrollWidth - sticky.clientWidth;
+      setDistance(Math.max(0, Math.round(d)));
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(track);
+    ro.observe(sticky);
+    window.addEventListener("orientationchange", measure);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener("orientationchange", measure);
+    };
+  }, [reduce]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setActive(null);
@@ -85,58 +110,74 @@ export function Portfolio() {
     };
   }, [active]);
 
-  return (
-    <section
-      id="realisations"
-      ref={sectionRef}
-      className="section-pad relative md:h-[320vh]"
-    >
-      <div className="md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center md:overflow-hidden">
-        <div className="mx-auto w-full max-w-[1600px]">
-          <SectionHeading
-            eyebrow="Selected work"
-            title={
-              <>
-                Quelques projets.
-                <br />
-                Beaucoup d&apos;impact.
-              </>
-            }
-            text="Films de marque, contenus publicitaires, événements, créations visuelles et productions live. Découvrez une sélection de projets conçus pour être vus — et surtout retenus."
-          />
-        </div>
+  const heading = (
+    <SectionHeading
+      eyebrow="Selected work"
+      title={
+        <>
+          Quelques projets.
+          <br />
+          Beaucoup d&apos;impact.
+        </>
+      }
+      text="Films de marque, contenus publicitaires, événements, créations visuelles et productions live. Découvrez une sélection de projets conçus pour être vus — et surtout retenus."
+    />
+  );
 
-        {/* Mobile : grille verticale native */}
-        <div className="mt-16 grid grid-cols-1 gap-4 md:hidden md:mt-24">
-          {projects.map((p, i) => (
-            <Reveal key={p.id} delay={(i % 2) * 0.08} className={spanClass(p.span)}>
+  if (reduce) {
+    return (
+      <>
+        <section id="realisations" className="section-pad relative">
+          <div className="mx-auto w-full max-w-[1600px]">{heading}</div>
+          <div className="mt-16 grid grid-cols-1 gap-10">
+            {projects.map((p) => (
               <ProjectCard
+                key={p.id}
                 project={p}
                 onClick={() => setActive(p)}
                 imageClassName={imageAspectClass(p.span)}
               />
-            </Reveal>
-          ))}
-        </div>
-
-        {/* Desktop : galerie horizontale pilotée par le scroll vertical */}
-        <div className="hidden md:mt-16 md:block">
-          <motion.div
-            style={{ x: reduce ? 0 : x }}
-            className="flex w-max gap-6 px-5 will-change-transform md:px-10"
-          >
-            {projects.map((p) => (
-              <div key={p.id} className="w-[42vw] max-w-[620px] shrink-0 lg:w-[34vw]">
-                <ProjectCard
-                  project={p}
-                  onClick={() => setActive(p)}
-                  imageClassName="aspect-[16/10]"
-                />
-              </div>
             ))}
-          </motion.div>
-        </div>
+          </div>
+        </section>
+        <ProjectModal active={active} onClose={() => setActive(null)} />
+      </>
+    );
+  }
+
+  return (
+    <section
+      id="realisations"
+      ref={sectionRef}
+      className="relative"
+      style={{ height: `calc(100svh + ${distance}px)` }}
+    >
+      <div
+        ref={stickyRef}
+        className="sticky top-0 flex h-[100svh] flex-col justify-center overflow-hidden"
+      >
+        <div className="mx-auto w-full max-w-[1600px] px-5 md:px-10">{heading}</div>
+
+        <motion.div
+          ref={trackRef}
+          style={{ x }}
+          className="mt-10 flex w-max gap-5 px-5 will-change-transform md:mt-16 md:gap-6 md:px-10"
+        >
+          {projects.map((p) => (
+            <div
+              key={p.id}
+              className="w-[80vw] shrink-0 md:w-[42vw] md:max-w-[620px] lg:w-[34vw]"
+            >
+              <ProjectCard
+                project={p}
+                onClick={() => setActive(p)}
+                imageClassName="aspect-4/3 md:aspect-[16/10]"
+              />
+            </div>
+          ))}
+        </motion.div>
       </div>
+
 
       <AnimatePresence>
         {active ? (
