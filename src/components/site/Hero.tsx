@@ -63,7 +63,7 @@ export function Hero() {
           {lines.map((line, i) => (
             <span key={line} className="block overflow-hidden">
               <motion.span
-                className="block"
+                className="block pb-[0.1em]"
                 initial={reduce ? { opacity: 0 } : { opacity: 0, y: "110%" }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 1.1, delay: 0.15 + i * 0.12, ease: [0.16, 1, 0.3, 1] }}
