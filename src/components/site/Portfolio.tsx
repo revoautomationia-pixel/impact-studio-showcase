@@ -70,7 +70,7 @@ export function Portfolio() {
     offset: ["start start", "end end"],
   });
 
-  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-72%"]);
+  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-55%"]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setActive(null);
