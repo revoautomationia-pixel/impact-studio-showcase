@@ -179,95 +179,101 @@ export function Portfolio() {
       </div>
 
 
-      <AnimatePresence>
-        {active ? (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-70 overflow-y-auto bg-ink/95 backdrop-blur-md"
-            role="dialog"
-            aria-modal="true"
-            aria-label={active.title}
-            onClick={() => setActive(null)}
-          >
-            <motion.div
-              initial={{ y: 40, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: 20, opacity: 0 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="mx-auto max-w-5xl px-5 py-16 md:px-10"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setActive(null)}
-                  className="rounded-full border border-border px-5 py-2 text-xs tracking-widest uppercase transition-colors hover:border-primary hover:text-primary"
-                >
-                  Fermer ✕
-                </button>
-              </div>
-
-              {active.video ? (
-                <video
-                  className="mt-6 aspect-video w-full bg-surface object-cover"
-                  src={active.video}
-                  poster={active.image}
-                  controls
-                  playsInline
-                  preload="none"
-                />
-              ) : (
-                <img
-                  src={active.image}
-                  alt={active.title}
-                  className="mt-6 aspect-video w-full object-cover"
-                  loading="lazy"
-                />
-              )}
-
-              <p className="eyebrow mt-10">{active.category}</p>
-              <h3 className="display mt-4 text-[clamp(2rem,5vw,3.6rem)]">{active.title}</h3>
-              <p className="mt-6 max-w-2xl leading-relaxed text-muted-foreground">
-                {active.description}
-              </p>
-
-              <dl className="mt-10 grid gap-8 border-t border-border pt-8 sm:grid-cols-3">
-                <div>
-                  <dt className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
-                    Client
-                  </dt>
-                  <dd className="mt-2">{active.client}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
-                    Mission
-                  </dt>
-                  <dd className="mt-2">{active.mission}</dd>
-                </div>
-                <div>
-                  <dt className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
-                    Année
-                  </dt>
-                  <dd className="mt-2">{active.year}</dd>
-                </div>
-              </dl>
-
-              <ul className="mt-8 flex flex-wrap gap-2">
-                {active.services.map((s) => (
-                  <li
-                    key={s}
-                    className="rounded-full border border-border px-4 py-2 text-xs text-muted-foreground"
-                  >
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </motion.div>
-        ) : null}
-      </AnimatePresence>
+      <ProjectModal active={active} onClose={() => setActive(null)} />
     </section>
+  );
+}
+
+function ProjectModal({ active, onClose }: { active: Project | null; onClose: () => void }) {
+  return (
+    <AnimatePresence>
+      {active ? (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-70 overflow-y-auto bg-ink/95 backdrop-blur-md"
+          role="dialog"
+          aria-modal="true"
+          aria-label={active.title}
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 20, opacity: 0 }}
+            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+            className="mx-auto max-w-5xl px-5 py-16 md:px-10"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-end">
+              <button
+                type="button"
+                onClick={onClose}
+                className="rounded-full border border-border px-5 py-2 text-xs tracking-widest uppercase transition-colors hover:border-primary hover:text-primary"
+              >
+                Fermer ✕
+              </button>
+            </div>
+
+            {active.video ? (
+              <video
+                className="mt-6 aspect-video w-full bg-surface object-cover"
+                src={active.video}
+                poster={active.image}
+                controls
+                playsInline
+                preload="none"
+              />
+            ) : (
+              <img
+                src={active.image}
+                alt={active.title}
+                className="mt-6 aspect-video w-full object-cover"
+                loading="lazy"
+              />
+            )}
+
+            <p className="eyebrow mt-10">{active.category}</p>
+            <h3 className="display mt-4 text-[clamp(2rem,5vw,3.6rem)]">{active.title}</h3>
+            <p className="mt-6 max-w-2xl leading-relaxed text-muted-foreground">
+              {active.description}
+            </p>
+
+            <dl className="mt-10 grid gap-8 border-t border-border pt-8 sm:grid-cols-3">
+              <div>
+                <dt className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
+                  Client
+                </dt>
+                <dd className="mt-2">{active.client}</dd>
+              </div>
+              <div>
+                <dt className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
+                  Mission
+                </dt>
+                <dd className="mt-2">{active.mission}</dd>
+              </div>
+              <div>
+                <dt className="text-xs tracking-[0.25em] text-muted-foreground uppercase">
+                  Année
+                </dt>
+                <dd className="mt-2">{active.year}</dd>
+              </div>
+            </dl>
+
+            <ul className="mt-8 flex flex-wrap gap-2">
+              {active.services.map((s) => (
+                <li
+                  key={s}
+                  className="rounded-full border border-border px-4 py-2 text-xs text-muted-foreground"
+                >
+                  {s}
+                </li>
+              ))}
+            </ul>
+          </motion.div>
+        </motion.div>
+      ) : null}
+    </AnimatePresence>
   );
 }
