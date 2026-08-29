@@ -1,7 +1,54 @@
-import { useEffect, useState } from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { useEffect, useRef, useState } from "react";
+import { AnimatePresence, motion, useReducedMotion, useScroll, useTransform } from "motion/react";
 import { Reveal, SectionHeading } from "./Reveal";
 import { projects, type Project } from "@/data/site";
+
+function ProjectCard({
+  project: p,
+  onClick,
+  className = "",
+  imageClassName = "",
+}: {
+  project: Project;
+  onClick: () => void;
+  className?: string;
+  imageClassName?: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`group block w-full text-left ${className}`}
+      aria-label={`Ouvrir le projet ${p.title}`}
+    >
+      <div className="relative overflow-hidden bg-surface">
+        <img
+          src={p.image}
+          alt={`${p.title} — ${p.category}`}
+          loading="lazy"
+          width={1600}
+          height={1000}
+          className={`w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04] ${imageClassName}`}
+        />
+        <div className="absolute inset-0 bg-ink/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
+        <span className="pointer-events-none absolute bottom-5 right-5 hidden rounded-full border border-primary/60 bg-ink/70 px-4 py-2 text-[0.65rem] tracking-[0.25em] text-primary uppercase opacity-0 backdrop-blur transition-all duration-500 group-hover:opacity-100 md:block">
+          View
+        </span>
+      </div>
+
+      <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
+        <div className="min-w-0">
+          <p className="text-[0.68rem] tracking-[0.25em] text-primary uppercase">{p.client}</p>
+          <h3 className="display mt-2 text-2xl md:text-3xl">{p.title}</h3>
+          <p className="mt-2 text-sm text-muted-foreground">{p.excerpt}</p>
+        </div>
+        <p className="shrink-0 text-xs text-muted-foreground">
+          {p.category} · {p.year}
+        </p>
+      </div>
+    </button>
+  );
+}
 
 function spanClass(span: Project["span"]) {
   if (span === "wide") return "md:col-span-7";
@@ -9,8 +56,21 @@ function spanClass(span: Project["span"]) {
   return "md:col-span-5";
 }
 
+function imageAspectClass(span: Project["span"]) {
+  return span === "wide" ? "aspect-[16/9]" : "aspect-4/3";
+}
+
 export function Portfolio() {
   const [active, setActive] = useState<Project | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+
+  const { scrollYProgress } = useScroll({
+    target: sectionRef,
+    offset: ["start start", "end end"],
+  });
+
+  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-72%"]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setActive(null);
@@ -26,61 +86,55 @@ export function Portfolio() {
   }, [active]);
 
   return (
-    <section id="realisations" className="section-pad">
-      <div className="mx-auto max-w-[1600px]">
-        <SectionHeading
-          eyebrow="Selected work"
-          title={
-            <>
-              Quelques projets.
-              <br />
-              Beaucoup d'impact.
-            </>
-          }
-          text="Films de marque, contenus publicitaires, événements, créations visuelles et productions live. Découvrez une sélection de projets conçus pour être vus — et surtout retenus."
-        />
+    <section
+      id="realisations"
+      ref={sectionRef}
+      className="section-pad relative md:h-[320vh]"
+    >
+      <div className="md:sticky md:top-0 md:flex md:h-screen md:flex-col md:justify-center md:overflow-hidden">
+        <div className="mx-auto w-full max-w-[1600px]">
+          <SectionHeading
+            eyebrow="Selected work"
+            title={
+              <>
+                Quelques projets.
+                <br />
+                Beaucoup d&apos;impact.
+              </>
+            }
+            text="Films de marque, contenus publicitaires, événements, créations visuelles et productions live. Découvrez une sélection de projets conçus pour être vus — et surtout retenus."
+          />
+        </div>
 
-        <div className="mt-16 grid grid-cols-1 gap-4 md:mt-24 md:grid-cols-12 md:gap-6">
+        {/* Mobile : grille verticale native */}
+        <div className="mt-16 grid grid-cols-1 gap-4 md:hidden md:mt-24">
           {projects.map((p, i) => (
             <Reveal key={p.id} delay={(i % 2) * 0.08} className={spanClass(p.span)}>
-              <button
-                type="button"
+              <ProjectCard
+                project={p}
                 onClick={() => setActive(p)}
-                className="group block w-full text-left"
-                aria-label={`Ouvrir le projet ${p.title}`}
-              >
-                <div className="relative overflow-hidden bg-surface">
-                  <img
-                    src={p.image}
-                    alt={`${p.title} — ${p.category}`}
-                    loading="lazy"
-                    width={1600}
-                    height={1000}
-                    className={`w-full object-cover transition-transform duration-[900ms] ease-out group-hover:scale-[1.04] ${
-                      p.span === "wide" ? "aspect-[16/9]" : "aspect-4/3"
-                    }`}
-                  />
-                  <div className="absolute inset-0 bg-ink/20 opacity-0 transition-opacity duration-500 group-hover:opacity-100" />
-                  <span className="pointer-events-none absolute bottom-5 right-5 hidden rounded-full border border-primary/60 bg-ink/70 px-4 py-2 text-[0.65rem] tracking-[0.25em] text-primary uppercase opacity-0 backdrop-blur transition-all duration-500 group-hover:opacity-100 md:block">
-                    View
-                  </span>
-                </div>
-
-                <div className="mt-5 grid grid-cols-[minmax(0,1fr)_auto] items-start gap-4">
-                  <div className="min-w-0">
-                    <p className="text-[0.68rem] tracking-[0.25em] text-primary uppercase">
-                      {p.client}
-                    </p>
-                    <h3 className="display mt-2 text-2xl md:text-3xl">{p.title}</h3>
-                    <p className="mt-2 text-sm text-muted-foreground">{p.excerpt}</p>
-                  </div>
-                  <p className="shrink-0 text-xs text-muted-foreground">
-                    {p.category} · {p.year}
-                  </p>
-                </div>
-              </button>
+                imageClassName={imageAspectClass(p.span)}
+              />
             </Reveal>
           ))}
+        </div>
+
+        {/* Desktop : galerie horizontale pilotée par le scroll vertical */}
+        <div className="hidden md:mt-16 md:block">
+          <motion.div
+            style={{ x: reduce ? 0 : x }}
+            className="flex w-max gap-6 px-5 will-change-transform md:px-10"
+          >
+            {projects.map((p) => (
+              <div key={p.id} className="w-[42vw] max-w-[620px] shrink-0 lg:w-[34vw]">
+                <ProjectCard
+                  project={p}
+                  onClick={() => setActive(p)}
+                  imageClassName="aspect-[16/10]"
+                />
+              </div>
+            ))}
+          </motion.div>
         </div>
       </div>
 
